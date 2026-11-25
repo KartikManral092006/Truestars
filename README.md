@@ -4,7 +4,7 @@
 
 TrueStars reads a product's reviews and tells you what actually goes wrong, how many buyers report it, and whether it matters to you. Every claim links to the reviews behind it.
 
-**Live demo:** https://truestars.vercel.app  ·  **Chrome extension:** https://truestars.vercel.app/extension
+**Live demo:** https://truestars.vercel.app  ·  **Chrome extension:** https://truestars.vercel.app/extension  ·  **Demo video (3:41):** https://youtu.be/onubY9LxIEE
 
 *Submitted to SLAY HACKS 2026.*
 
