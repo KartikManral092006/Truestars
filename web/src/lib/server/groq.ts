@@ -18,6 +18,26 @@ export const MODELS = {
   reason: process.env.GROQ_REASON_MODEL ?? "openai/gpt-oss-120b",
 };
 
+export function repairJson(raw: string): unknown {
+  try {
+    return JSON.parse(raw);
+  } catch {}
+  const fixed = raw
+    .trim()
+    .replace(/^```(?:json)?\s*|\s*```$/g, "")
+    .replace(/,\s*"\s*([}\]])/g, "$1")
+    .replace(/"\s*,\s*"\s*([}\]])/g, '"$1')
+    .replace(/,\s*([}\]])/g, "$1");
+  return JSON.parse(fixed);
+}
+
+function failedGeneration(e: unknown): string | null {
+  if (!e || typeof e !== "object" || !("status" in e) || e.status !== 400) return null;
+  const err = (e as { error?: { error?: { code?: string; failed_generation?: string }; code?: string; failed_generation?: string } }).error;
+  const inner = err?.error ?? err;
+  return inner?.code === "json_validate_failed" && typeof inner.failed_generation === "string" ? inner.failed_generation : null;
+}
+
 export async function jsonCompletion<T>(opts: {
   model: string;
   system: string;
@@ -28,20 +48,28 @@ export async function jsonCompletion<T>(opts: {
   const groq = getClient();
   let lastError: unknown;
   for (let attempt = 0; attempt < 2; attempt++) {
-    const res = await groq.chat.completions.create({
-      model: opts.model,
-      temperature: 0,
-      max_tokens: opts.maxTokens ?? 4096,
-      response_format: { type: "json_object" },
-      ...(opts.model.startsWith("openai/gpt-oss") ? { reasoning_effort: "low" as const, include_reasoning: false } : {}),
-      messages: [
-        { role: "system", content: opts.system },
-        { role: "user", content: opts.user },
-      ],
-    });
-    const raw = res.choices[0]?.message?.content ?? "";
+    let raw: string;
     try {
-      const parsed = opts.schema.safeParse(JSON.parse(raw));
+      const res = await groq.chat.completions.create({
+        model: opts.model,
+        temperature: attempt === 0 ? 0 : 0.3,
+        max_tokens: opts.maxTokens ?? 4096,
+        response_format: { type: "json_object" },
+        ...(opts.model.startsWith("openai/gpt-oss") ? { reasoning_effort: "low" as const, include_reasoning: false } : {}),
+        messages: [
+          { role: "system", content: opts.system },
+          { role: "user", content: opts.user },
+        ],
+      });
+      raw = res.choices[0]?.message?.content ?? "";
+    } catch (e) {
+      const salvage = failedGeneration(e);
+      if (salvage == null) throw e;
+      raw = salvage;
+      lastError = e;
+    }
+    try {
+      const parsed = opts.schema.safeParse(repairJson(raw));
       if (parsed.success) return parsed.data;
       lastError = parsed.error;
     } catch (e) {
