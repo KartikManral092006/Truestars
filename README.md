@@ -2,6 +2,8 @@
 
 **Know what goes wrong before you buy.**
 
+Live: **https://truestars.vercel.app**
+
 A 4.4★ average hides the one problem that will ruin a purchase for you. TrueStars reads hundreds of reviews, finds the real dealbreakers, estimates how many buyers hit each one, and links every claim to the reviews behind it. Tell it how you will use the product and it sorts the problems by how much they matter to you.
 
 
@@ -71,6 +73,14 @@ npm run precompute              # writes public/samples/*.report.json
 3. Open an Amazon product, click **See more reviews**, then click the ★ toolbar button.
 
 Supported pages: Amazon review lists, Google Maps reviews, any site with schema.org review data (JSON-LD or microdata), and any selected text.
+
+## Deploy
+
+The live site runs on Vercel and redeploys on every push to `main`.
+
+- Root directory: `web`
+- Environment variables: `GROQ_API_KEY`, `GROQ_EXTRACT_MODEL`, `GROQ_REASON_MODEL`, `NEXT_PUBLIC_SITE_URL`
+- After changing the extension, rebuild `web/public/downloads/truestars-extension.zip`.
 
 ## Tech
 
