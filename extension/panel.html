@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TrueStars</title>
+    <link rel="stylesheet" href="panel.css" />
+  </head>
+  <body>
+    <div id="status" class="status" role="status" aria-live="polite">
+      <p class="title">Click the TrueStars button on a page with reviews.</p>
+      <p class="hint">Works on Amazon, Google Maps and sites that publish review data. You can also select review text on any page first.</p>
+    </div>
+    <iframe id="app" title="TrueStars report" hidden></iframe>
+    <footer>
+      <button id="settings" type="button" aria-label="Server settings" title="Server settings">Settings</button>
+    </footer>
+    <script src="config.js"></script>
+    <script src="panel.js"></script>
+  </body>
+</html>

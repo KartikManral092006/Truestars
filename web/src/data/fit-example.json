@@ -1,0 +1,20 @@
+{
+ "profile": "I weigh myself every morning to track a diet.",
+ "fits": [
+  {
+   "name": "Unreliable weight readings",
+   "relevance": "high",
+   "reason": "You weigh yourself daily, so inaccurate readings would defeat your diet tracking."
+  },
+  {
+   "name": "Power and on/off problems",
+   "relevance": "high",
+   "reason": "You need the scale to work each morning; power issues would stop you from weighing."
+  },
+  {
+   "name": "Fragile construction",
+   "relevance": "medium",
+   "reason": "A fragile scale could break, but it doesn\u2019t directly affect daily weighing unless it fails."
+  }
+ ]
+}

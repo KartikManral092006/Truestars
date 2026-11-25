@@ -1,0 +1,281 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --canvas: #ffffff;
+  --sunk: #f6f7f9;
+  --surface: #f7f8fa;
+  --surface-2: #eef0f3;
+  --ink: #0e1116;
+  --ink-2: #2b313b;
+  --subtle: #5b6270;
+  --line: #e6e8ec;
+  --line-strong: #d5d9df;
+  --gold: #e0a100;
+  --gold-soft: #fff3cc;
+  --gold-ink: #8a5a00;
+  --coral: #e5484d;
+  --ember: #e2711d;
+  --green: #12a150;
+  --coral-ink: #c22a30;
+  --ember-ink: #a64a08;
+  --green-ink: #0a7a3a;
+
+  --shadow-card: 0 1px 2px rgb(16 24 40 / 0.04), 0 12px 32px -16px rgb(16 24 40 / 0.14);
+  --shadow-float: 0 2px 4px rgb(16 24 40 / 0.04), 0 32px 80px -32px rgb(16 24 40 / 0.28);
+
+  --background: var(--canvas);
+  --foreground: var(--ink);
+  --card: var(--canvas);
+  --card-foreground: var(--ink);
+  --popover: var(--canvas);
+  --popover-foreground: var(--ink);
+  --primary: var(--ink);
+  --primary-foreground: #ffffff;
+  --secondary: var(--surface-2);
+  --secondary-foreground: var(--ink);
+  --muted: var(--surface-2);
+  --muted-foreground: var(--subtle);
+  --accent: var(--surface-2);
+  --accent-foreground: var(--ink);
+  --destructive: var(--coral);
+  --border: var(--line);
+  --input: var(--line-strong);
+  --ring: var(--ink);
+  --radius: 0.75rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-canvas: var(--canvas);
+  --color-sunk: var(--sunk);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-subtle: var(--subtle);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-gold-ink: var(--gold-ink);
+  --color-coral: var(--coral);
+  --color-ember: var(--ember);
+  --color-green: var(--green);
+  --color-coral-ink: var(--coral-ink);
+  --color-ember-ink: var(--ember-ink);
+  --color-green-ink: var(--green-ink);
+
+  --shadow-card: var(--shadow-card);
+  --shadow-float: var(--shadow-float);
+
+  --font-sans: var(--font-instrument);
+  --font-display: var(--font-instrument);
+  --font-heading: var(--font-instrument);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+
+  --animate-marquee: marquee var(--duration) infinite linear;
+  --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(calc(-100% - var(--gap)));
+    }
+  }
+  @keyframes marquee-vertical {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(calc(-100% - var(--gap)));
+    }
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    color-scheme: light;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    font-kerning: normal;
+    font-feature-settings: "kern", "liga", "calt";
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+  p,
+  li,
+  dd,
+  blockquote {
+    text-wrap: pretty;
+    hanging-punctuation: first;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 3px;
+  }
+}
+
+.font-display {
+  font-family: var(--font-instrument);
+}
+
+@utility t-display {
+  font-family: var(--font-instrument);
+  font-weight: 600;
+  font-size: clamp(3rem, 7vw, 6.25rem);
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+  font-variation-settings: "wdth" 82;
+}
+
+@utility t-h1 {
+  font-family: var(--font-instrument);
+  font-weight: 600;
+  font-size: clamp(2.5rem, 5vw, 4.25rem);
+  line-height: 1;
+  letter-spacing: -0.032em;
+  font-variation-settings: "wdth" 85;
+}
+
+@utility t-h2 {
+  font-family: var(--font-instrument);
+  font-weight: 600;
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  line-height: 1.04;
+  letter-spacing: -0.028em;
+  font-variation-settings: "wdth" 88;
+}
+
+@utility t-h3 {
+  font-family: var(--font-instrument);
+  font-weight: 600;
+  font-size: clamp(1.2rem, 1.6vw, 1.4rem);
+  line-height: 1.2;
+  letter-spacing: -0.012em;
+}
+
+@utility t-lead {
+  font-size: clamp(1.125rem, 1.3vw, 1.25rem);
+  line-height: 1.55;
+  color: var(--subtle);
+  max-width: 38rem;
+}
+
+@utility t-body {
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  max-width: 40rem;
+}
+
+@utility t-small {
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+@utility t-caption {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--subtle);
+}
+
+@utility t-num {
+  font-family: var(--font-instrument);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-variation-settings: "wdth" 80;
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+}
+
+@utility t-eyebrow {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--subtle);
+}
+
+.reveal-line {
+  overflow: clip;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+
+mark {
+  background: var(--gold-soft);
+  color: var(--ink);
+  box-shadow: inset 0 -2px 0 var(--gold);
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+::selection {
+  background: var(--gold-soft);
+  color: var(--ink);
+}
+
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

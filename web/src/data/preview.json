@@ -1,0 +1,176 @@
+{
+ "slug": "bathroom-scale",
+ "title": "Utopia digital bathroom scale",
+ "headline": {
+  "tone": "caution",
+  "text": "Biggest risk: unreliable weight readings. Roughly 27% of buyers mention it."
+ },
+ "avg": 3.8482142857142856,
+ "hist": [
+  194,
+  70,
+  60,
+  184,
+  612
+ ],
+ "total": 1120,
+ "analysed": 100,
+ "quality": {
+  "proposed": 114,
+  "grounded": 111
+ },
+ "dealbreakers": [
+  {
+   "name": "Unreliable weight readings",
+   "severity": "major",
+   "share": 0.2698891223155929,
+   "count": 47,
+   "isDealbreaker": true,
+   "quote": "Every morning it tells me I weigh 164.3 pounds.  It never changes."
+  },
+  {
+   "name": "Power and on/off problems",
+   "severity": "critical",
+   "share": 0.11288982259570493,
+   "count": 12,
+   "isDealbreaker": true,
+   "quote": "it gave me an ominous \"Lo\" message, that really should mean low battery, except replacing the battery/resetting the scale/doing everything humanly possible with a scale didn't fix it."
+  },
+  {
+   "name": "Fragile construction",
+   "severity": "major",
+   "share": 0.10906045751633987,
+   "count": 19,
+   "isDealbreaker": true,
+   "quote": "The corner of the scale barely tapped against the side of my bathtub and the whole thing shattered."
+  },
+  {
+   "name": "Surface and stability issues",
+   "severity": "minor",
+   "share": 0.11311507936507934,
+   "count": 7,
+   "isDealbreaker": false,
+   "quote": "one of 4 sensors was not properly inserted in it's mount place"
+  }
+ ],
+ "checklist": [
+  {
+   "dealbreakerId": "p1",
+   "when": "Day 1",
+   "action": "Place scale on flat surface, press power button, verify it turns on and displays weight",
+   "why": "Buyers report it often never powers up"
+  },
+  {
+   "dealbreakerId": "p4",
+   "when": "Day 1",
+   "action": "Turn on, press any reset/calibration button, ensure scale zeroes before weighing",
+   "why": "Calibration often stuck at a weight"
+  },
+  {
+   "dealbreakerId": "p3",
+   "when": "Day 1",
+   "action": "Place scale on carpet and hardwood, step on each corner, observe reading changes",
+   "why": "Stability varies with surface type"
+  }
+ ],
+ "patterns": [
+  {
+   "title": "2 reviews say the product was free or discounted",
+   "level": "info"
+  },
+  {
+   "title": "Love-it-or-hate-it ratings",
+   "level": "info"
+  }
+ ],
+ "praises": [
+  {
+   "name": "Accurate measurements",
+   "share": 0.35529761904761903
+  },
+  {
+   "name": "Sleek and attractive design",
+   "share": 0.23505952380952377
+  },
+  {
+   "name": "Easy to use",
+   "share": 0.21869047619047616
+  }
+ ],
+ "lifespan": {
+  "samples": 8,
+  "medianLabel": "First month",
+  "buckets": [
+   {
+    "label": "On arrival",
+    "maxDays": 1,
+    "count": 1
+   },
+   {
+    "label": "First week",
+    "maxDays": 7,
+    "count": 1
+   },
+   {
+    "label": "First month",
+    "maxDays": 31,
+    "count": 5
+   },
+   {
+    "label": "1–3 months",
+    "maxDays": 92,
+    "count": 0
+   },
+   {
+    "label": "3–6 months",
+    "maxDays": 183,
+    "count": 0
+   },
+   {
+    "label": "6–12 months",
+    "maxDays": 366,
+    "count": 1
+   },
+   {
+    "label": "After a year",
+    "maxDays": null,
+    "count": 0
+   }
+  ]
+ },
+ "hidden": [
+  {
+   "reviewId": "r985",
+   "rating": 4,
+   "label": "display not working on arrival",
+   "quote": "The display doesn't work upon arrival"
+  },
+  {
+   "reviewId": "r654",
+   "rating": 4,
+   "label": "inaccurate weight",
+   "quote": "I lost 7 lbs! So... either my cat has antigravity abilities or this scale isn't very accurate"
+  }
+ ],
+ "products": {
+  "bathroom-scale": {
+   "tone": "caution",
+   "text": "Biggest risk: unreliable weight readings. Roughly 27% of buyers mention it."
+  },
+  "white-noise-machine": {
+   "tone": "danger",
+   "text": "Main risk: device stops working or unsafe. Roughly 5% of buyers report it."
+  },
+  "facial-massager": {
+   "tone": "caution",
+   "text": "Biggest risk: device stops working. Roughly 17% of buyers mention it."
+  }
+ },
+ "stats": {
+  "reviews": 3175,
+  "analysed": 280,
+  "proposed": 284,
+  "grounded": 278,
+  "problems": 17
+ }
+}

@@ -1,0 +1,44 @@
+[
+ {
+  "slug": "bathroom-scale",
+  "title": "Digital Glass Bathroom Scale Black - Holds Up To 396 lbs - by Utopia Scales",
+  "image": "/samples/img/bathroom-scale.jpg",
+  "count": 1120,
+  "avg": 3.8482142857142856,
+  "hist": [
+   194,
+   70,
+   60,
+   184,
+   612
+  ]
+ },
+ {
+  "slug": "white-noise-machine",
+  "title": "Marpac Dohm-SS Single Speed All-Natural White Noise Sound Machine, Actual Fan Inside, Tan",
+  "image": "/samples/img/white-noise-machine.jpg",
+  "count": 984,
+  "avg": 4.474593495934959,
+  "hist": [
+   42,
+   41,
+   48,
+   130,
+   723
+  ]
+ },
+ {
+  "slug": "facial-massager",
+  "title": "ChiTronic 5 in 1 Multi-Function Portable Facial Skin Care Electric Massager Scrubber with Facial Latex Brush Cosmetic Sponge (Batteries not Included)",
+  "image": "/samples/img/facial-massager.jpg",
+  "count": 1071,
+  "avg": 3.104575163398693,
+  "hist": [
+   285,
+   150,
+   150,
+   140,
+   346
+  ]
+ }
+]
