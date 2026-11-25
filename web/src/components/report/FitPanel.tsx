@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { postJson } from "@/lib/http";
 import type { Dealbreaker, Fit } from "@/lib/types";
 
 const SUGGESTIONS = ["A gift for my elderly parent", "I'll use it every day for years", "I'm on a tight budget"];
@@ -25,25 +26,19 @@ export function FitPanel({
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch("/api/fit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          profile,
-          themes: dealbreakers.slice(0, 8).map((d) => ({
-            id: d.id,
-            name: d.name,
-            description: d.description,
-            examples: d.evidence
-              .map((e) => e.quote)
-              .filter((q): q is string => !!q)
-              .slice(0, 3)
-              .map((q) => q.slice(0, 300)),
-          })),
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Sorting failed. Try again.");
+      const data = await postJson<{ fits: Fit[] }>("/api/fit", {
+        profile,
+        themes: dealbreakers.slice(0, 8).map((d) => ({
+          id: d.id,
+          name: d.name,
+          description: d.description,
+          examples: d.evidence
+            .map((e) => e.quote)
+            .filter((q): q is string => !!q)
+            .slice(0, 3)
+            .map((q) => q.slice(0, 300)),
+        })),
+      }, { timeoutMs: 30_000 });
       onFits(Object.fromEntries((data.fits as Fit[]).map((f) => [f.id, f])));
     } catch (e) {
       setError((e as Error).message);

@@ -1,4 +1,5 @@
 import type { AskAnswer, AskPoint, AskStance, Review } from "./types";
+import { postJson } from "./http";
 import { buildIndex, search, type SearchIndex } from "./search";
 
 function balanced(hits: Review[], k: number): Review[] {
@@ -18,11 +19,8 @@ function balanced(hits: Review[], k: number): Review[] {
 
 const cache = new WeakMap<Review[], SearchIndex>();
 
-async function post<T>(url: string, body: unknown): Promise<T> {
-  const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error ?? `Request failed (${res.status})`);
-  return data as T;
+function post<T>(url: string, body: unknown): Promise<T> {
+  return postJson<T>(url, body, { timeoutMs: 30_000 });
 }
 
 export async function askReviews(question: string, reviews: Review[]): Promise<AskAnswer> {

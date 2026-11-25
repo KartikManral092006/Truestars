@@ -6,7 +6,7 @@ import Magnet from "@/components/bits/Magnet";
 import RotatingText from "@/components/bits/RotatingText";
 import StarBorder from "@/components/bits/StarBorder";
 
-const SITES = ["Amazon", "Google Maps", "shops that publish review data", "any review text you select"];
+const SITES = ["Amazon", "Flipkart", "Google Maps", "shops that publish review data", "any review text you select"];
 
 export function ExtensionCta() {
   return (

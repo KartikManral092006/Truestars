@@ -1,4 +1,4 @@
-(() => {
+(async () => {
   const MAX_REVIEWS = 1000;
   const clean = (s) => (s || "").replace(/\s+\n/g, "\n").replace(/[ \t]+/g, " ").trim();
   const text = (root, sel) => clean(root.querySelector(sel)?.innerText);
@@ -7,7 +7,8 @@
     if (!raw) return undefined;
     const onPart = raw.includes(" on ") ? raw.split(" on ").pop() : raw;
     const d = new Date(onPart);
-    return Number.isNaN(d.getTime()) ? undefined : d.toISOString().slice(0, 10);
+    if (Number.isNaN(d.getTime())) return undefined;
+    return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())).toISOString().slice(0, 10);
   }
 
   function parseRating(raw) {
@@ -21,18 +22,25 @@
   function amazon() {
     const nodes = document.querySelectorAll('[data-hook="review"]');
     const reviews = [];
+    const full = (el) => clean((el?.textContent || "").replace(/\s+/g, " "));
     nodes.forEach((n) => {
-      const body = text(n, '[data-hook="review-body"]');
+      const bodyEl =
+        n.querySelector('[data-hook="reviewRichContentContainer"]') ||
+        n.querySelector('[data-hook="review-body"]') ||
+        n.querySelector('[data-hook="reviewText"]');
+      const body = full(bodyEl).replace(/\s*(Read more|See more|See less)\s*$/i, "");
       if (!body) return;
-      const ratingRaw =
-        n.querySelector('[data-hook="review-star-rating"], [data-hook="cmps-review-star-rating"]')?.textContent;
-      const titleEl = n.querySelector('[data-hook="review-title"]');
+      const ratingRaw = n.querySelector(
+        '[data-hook="review-star-rating"], [data-hook="cmps-review-star-rating"], [data-hook*="star-rating"]',
+      )?.textContent;
+      const titleEl = n.querySelector('[data-hook="reviewTitle"], [data-hook="review-title"]');
       const titleSpans = titleEl ? titleEl.querySelectorAll("span") : [];
-      const title = clean(titleSpans.length ? titleSpans[titleSpans.length - 1].innerText : titleEl?.innerText);
+      const rawTitle = titleSpans.length ? titleSpans[titleSpans.length - 1].textContent : titleEl?.textContent;
+      const title = clean((rawTitle || "").replace(/\d(\.\d)? out of 5 stars/i, ""));
       reviews.push({
         rating: parseRating(ratingRaw),
         title: title || undefined,
-        text: body.replace(/\s*Read more\s*$/i, ""),
+        text: body,
         date: parseDate(text(n, '[data-hook="review-date"]')),
         verified: !!n.querySelector('[data-hook="avp-badge"], [data-hook="avp-badge-linkless"]'),
         author: text(n, ".a-profile-name") || undefined,
@@ -112,6 +120,94 @@
     return { site: "Google Maps", product: { title }, reviews };
   }
 
+  const RATING_LINE = /^([1-5])(?:\.\d)?\s*★?$/;
+  const CARD_MARKER = /^(Helpful for \d+|Verified Purchase|Certified Buyer)/;
+  const BOUNDARY = /^(,|Helpful for \d+|Verified Purchase|Certified Buyer|\d+\s+(day|days|month|months|year|years)\s+ago|·)/i;
+
+  function flipkartCards() {
+    const markers = [...document.querySelectorAll("body *")].filter(
+      (e) => e.childElementCount === 0 && CARD_MARKER.test((e.textContent || "").trim()),
+    );
+    const cards = new Set();
+    for (const leaf of markers) {
+      let n = leaf.parentElement;
+      for (let i = 0; i < 14 && n; i++, n = n.parentElement) {
+        const t = (n.innerText || "").trim();
+        if (t.length > 20 && RATING_LINE.test(t.split("\n")[0].trim())) {
+          cards.add(n);
+          break;
+        }
+      }
+    }
+    const list = [...cards];
+    return list.filter((c) => !list.some((o) => o !== c && c.contains(o)));
+  }
+
+  function flipkartDate(lines) {
+    for (const l of lines) {
+      let m = l.match(/\b([A-Z][a-z]{2}),?\s*(\d{4})\b/);
+      if (m) {
+        const month = "JanFebMarAprMayJunJulAugSepOctNovDec".indexOf(m[1]) / 3;
+        if (Number.isInteger(month) && month >= 0) return new Date(Date.UTC(Number(m[2]), month, 1)).toISOString().slice(0, 10);
+      }
+      m = l.match(/(\d+)\s+(day|month|year)s?\s+ago/i);
+      if (m) {
+        const d = new Date();
+        const n = Number(m[1]);
+        if (/day/i.test(m[2])) d.setDate(d.getDate() - n);
+        else if (/month/i.test(m[2])) d.setMonth(d.getMonth() - n);
+        else d.setFullYear(d.getFullYear() - n);
+        return d.toISOString().slice(0, 10);
+      }
+    }
+    return undefined;
+  }
+
+  function flipkart() {
+    const empty = { site: "Flipkart", product: { title: document.title }, reviews: [] };
+    if (!/flipkart\./i.test(location.hostname) && !/Flipkart/.test(document.title)) return empty;
+    const reviews = [];
+    for (const card of flipkartCards()) {
+      const lines = card.innerText.split("\n").map((s) => s.trim()).filter((s) => s && s !== "•");
+      const rating = parseRating(lines[0]);
+      let i = 1;
+      const title = lines[i] && !BOUNDARY.test(lines[i]) ? lines[i++] : undefined;
+      if (lines[i] && /^Review for:/i.test(lines[i])) i++;
+      let b = i;
+      while (b < lines.length && !BOUNDARY.test(lines[b])) b++;
+      const bodyEnd = b - 1 > i ? b - 1 : b;
+      const body = lines
+        .slice(i, bodyEnd)
+        .join("\n")
+        .replace(/(\.\.\.|…)?\s*(more|READ MORE)$/i, "")
+        .trim();
+      const textValue = body || title || "";
+      if (textValue.length < 3) continue;
+      reviews.push({
+        rating,
+        title: body ? title : undefined,
+        text: textValue,
+        date: flipkartDate(lines),
+        verified: lines.some((l) => /Verified Purchase|Certified Buyer/i.test(l)),
+      });
+    }
+    const heading = clean(document.querySelector("h1")?.innerText) || document.title;
+    return { site: "Flipkart", product: { title: heading.split(" Reviews:")[0] }, reviews };
+  }
+
+  async function expandTruncated() {
+    if (!/flipkart\./i.test(location.hostname)) return;
+    const buttons = [...document.querySelectorAll("body *")].filter(
+      (e) => e.childElementCount === 0 && /^(more|READ MORE|Read more)$/.test((e.textContent || "").trim()),
+    );
+    for (const b of buttons.slice(0, 60)) {
+      try {
+        b.click();
+      } catch {}
+    }
+    if (buttons.length) await new Promise((r) => setTimeout(r, 500));
+  }
+
   function selection() {
     const sel = clean(window.getSelection()?.toString());
     if (!sel || sel.length < 40) return { site: "Selection", product: { title: document.title }, reviews: [] };
@@ -123,8 +219,10 @@
     return { site: "Selected text", product: { title: document.title }, reviews };
   }
 
+  await expandTruncated();
+
   const candidates = [];
-  for (const fn of [selection, amazon, googleMaps, jsonLd, microdata]) {
+  for (const fn of [selection, amazon, flipkart, googleMaps, jsonLd, microdata]) {
     try {
       candidates.push(fn());
     } catch {}

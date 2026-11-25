@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "TrueStars – what goes wrong, before you buy",
   "short_name": "TrueStars",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Reads the reviews on the page you are viewing and shows the real dealbreakers, how often they happen, and the reviews behind each claim.",
   "action": {
     "default_title": "Find the dealbreakers in these reviews",

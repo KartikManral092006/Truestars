@@ -1,4 +1,5 @@
 import type { ChecklistItem, ExtractedReview, ProductInfo, QuoteQuality, Report, Review, ThemesResult } from "./types";
+import { postJson } from "./http";
 import { buildReport, selectForAnalysis } from "./report";
 
 export type Progress = { stage: "reading" | "grouping" | "checklist" | "done"; done: number; total: number };
@@ -6,16 +7,8 @@ export type Progress = { stage: "reading" | "grouping" | "checklist" | "done"; d
 const BATCH = 20;
 const CONCURRENCY = 2;
 
-async function post<T>(url: string, body: unknown, signal?: AbortSignal, baseUrl = ""): Promise<T> {
-  const res = await fetch(baseUrl + url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-    signal,
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error ?? `Request failed (${res.status})`);
-  return data as T;
+function post<T>(url: string, body: unknown, signal?: AbortSignal, baseUrl = ""): Promise<T> {
+  return postJson<T>(url, body, { signal, baseUrl });
 }
 
 function countLabels(lists: string[][]): { label: string; count: number }[] {
