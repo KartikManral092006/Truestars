@@ -195,6 +195,225 @@
     return { site: "Flipkart", product: { title: heading.split(" Reviews:")[0] }, reviews };
   }
 
+  const OUT_OF_5 =
+    /(\d(?:[.,]\d+)?)\s*(?:out of|of|\/|von|sur|de|su|van|z|из|na|en|中|のうち|점 만점에)\s*(?:5|five)\b/i;
+  const RATED = /(?:rated|rating|note|bewertung|valoración|avaliação|valutazione|оценка|評価)\D{0,12}(\d(?:[.,]\d+)?)/i;
+  const VERIFIED =
+    /verified (purchase|buyer|owner|user|reviewer)|certified buyer|achat vérifié|verifizierter kauf|compra verificada|acquisto verificato|подтвержденная покупка|購入者|구매 인증/i;
+  const UI_LINE =
+    /^(helpful|report|reply|share|like|read more|see more|show more|more|less|translate|was this review helpful|yes|no|\d+ people found this helpful|\(\d+\)|\d+)$/i;
+  const DATE_PATTERNS = [
+    /\b(\d{4})-(\d{2})-(\d{2})\b/,
+    /\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?\s+\d{1,2},?\s+\d{4}\b/i,
+    /\b\d{1,2}\s+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?,?\s+\d{4}\b/i,
+
+    /\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*,?\s+\d{4}\b/i,
+  ];
+
+  function toIsoDate(s) {
+    const d = new Date(s);
+    if (Number.isNaN(d.getTime()) || d.getFullYear() < 2000) return undefined;
+    return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())).toISOString().slice(0, 10);
+  }
+
+  function numericDate(l) {
+    const m = l.match(/\b(\d{1,2})[/.](\d{1,2})[/.](\d{4})\b/);
+    if (!m) return undefined;
+    let [a, b] = [Number(m[1]), Number(m[2])];
+    const usStyle = (document.documentElement.lang || "").toLowerCase() === "en-us";
+    let day = usStyle ? b : a;
+    let month = usStyle ? a : b;
+    if (a > 12) [day, month] = [a, b];
+    else if (b > 12) [day, month] = [b, a];
+    if (month < 1 || month > 12 || day < 1 || day > 31) return undefined;
+    return new Date(Date.UTC(Number(m[3]), month - 1, day)).toISOString().slice(0, 10);
+  }
+
+  function findDate(lines) {
+    for (const l of lines) {
+      const numeric = numericDate(l);
+      if (numeric) return numeric;
+      for (const re of DATE_PATTERNS) {
+        const m = l.match(re);
+        if (m) {
+          const iso = toIsoDate(m[0].replace(/,/g, ""));
+          if (iso) return iso;
+        }
+      }
+      const rel = l.match(/(\d+)\s+(day|week|month|year)s?\s+ago/i);
+      if (rel) {
+        const d = new Date();
+        const n = Number(rel[1]);
+        if (/day/i.test(rel[2])) d.setDate(d.getDate() - n);
+        else if (/week/i.test(rel[2])) d.setDate(d.getDate() - 7 * n);
+        else if (/month/i.test(rel[2])) d.setMonth(d.getMonth() - n);
+        else d.setFullYear(d.getFullYear() - n);
+        return d.toISOString().slice(0, 10);
+      }
+    }
+    return undefined;
+  }
+
+  function ratingOf(el) {
+    for (const attr of ["aria-label", "title", "alt", "data-rating", "data-score", "data-value", "content"]) {
+      const v = el.getAttribute && el.getAttribute(attr);
+      if (!v) continue;
+      const m = v.match(OUT_OF_5) || v.match(RATED);
+      if (m) {
+        const r = parseFloat(m[1].replace(",", "."));
+        if (r >= 0 && r <= 5) return r;
+      }
+      if (/^(data-rating|data-score|data-value|content)$/.test(attr) && /^\d(?:[.,]\d+)?$/.test(v.trim())) {
+        const r = parseFloat(v.replace(",", "."));
+        if (r >= 0.5 && r <= 5 && /rat|star|score/i.test(`${el.className} ${el.getAttribute("itemprop") || ""}`)) return r;
+      }
+    }
+    const now = el.getAttribute && el.getAttribute("aria-valuenow");
+    if (now && (el.getAttribute("aria-valuemax") || "5") === "5") {
+      const r = parseFloat(now);
+      if (r >= 0 && r <= 5) return r;
+    }
+    const cls = typeof el.className === "string" ? el.className : "";
+    if (/star|rating/i.test(cls)) {
+      const w = el.style && el.style.width;
+      if (w && /%$/.test(w)) {
+        const r = Math.round((parseFloat(w) / 20) * 2) / 2;
+        if (r >= 0.5 && r <= 5) return r;
+      }
+      const own = (el.textContent || "").trim();
+      if (own.length <= 12) {
+        const m = own.match(OUT_OF_5) || own.match(/^(\d(?:[.,]\d)?)\s*★?$/) || null;
+        if (m) {
+          const r = parseFloat(m[1].replace(",", "."));
+          if (r >= 0.5 && r <= 5) return r;
+        }
+        const filled = (own.match(/★/g) || []).length;
+        if (filled && /^[★☆\s]+$/.test(own)) return filled;
+      }
+      const icons = el.querySelectorAll('[class*="full"], [class*="filled"], [class*="active"], [class*="-on"]');
+      if (icons.length >= 1 && icons.length <= 5 && el.children.length === 5) return icons.length;
+    }
+    if (el.childElementCount >= 1 && el.childElementCount <= 3) {
+      const own = [...el.childNodes]
+        .filter((n) => n.nodeType === 3)
+        .map((n) => n.textContent)
+        .join("")
+        .trim();
+      if (/^[1-5](?:[.,]\d)?$/.test(own)) {
+        const icon = el.querySelector("svg, img, i, [class*='star' i]");
+        const label = icon
+          ? `${icon.getAttribute("class") || ""} ${icon.getAttribute("alt") || ""} ${icon.getAttribute("aria-label") || ""} ${icon.querySelector("title")?.textContent || ""} ${icon.textContent || ""}`
+          : "";
+        if (/star|★/i.test(label)) return parseFloat(own.replace(",", "."));
+      }
+    }
+    return null;
+  }
+
+  function cardFor(el) {
+    let n = el.parentElement;
+    for (let i = 0; i < 9 && n && n !== document.body; i++, n = n.parentElement) {
+      const t = (n.innerText || "").trim();
+      if (t.length > 6000) return null;
+      if (t.length >= 40 && t.split("\n").some((l) => l.trim().length >= 25)) return n;
+    }
+    return null;
+  }
+
+  function signature(el) {
+    const cls = (typeof el.className === "string" ? el.className : "")
+      .split(/\s+/)
+      .filter((c) => c && !/\d{3,}/.test(c))
+      .sort()
+      .join(".");
+    return `${el.tagName}|${cls}|${el.parentElement ? el.parentElement.tagName : ""}`;
+  }
+
+  function generic() {
+    const found = [];
+    for (const el of document.querySelectorAll("body *")) {
+      if (found.length > 3000) break;
+      const r = ratingOf(el);
+      if (r == null) continue;
+      const card = cardFor(el);
+      if (card) found.push({ card, rating: r, indicator: el });
+    }
+    const byCard = new Map();
+    for (const f of found) if (!byCard.has(f.card)) byCard.set(f.card, f);
+    let entries = [...byCard.values()];
+    entries = entries.filter((e) => !entries.some((o) => o !== e && e.card.contains(o.card)));
+    const groups = new Map();
+    for (const e of entries) {
+      const key = signature(e.card);
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(e);
+    }
+    const PRICE = /(?:[$€£¥₹]|rs\.?|inr|usd|eur|aed|sar|r\$|mxn)\s?\d|\d\s?(?:[€₫₽]|zł|kr|lei)/i;
+    const isProductTile = (card) => {
+      const t = card.innerText || "";
+      const link = card.closest("a[href]") || card.querySelector("a[href]");
+      const linkText = link ? (link.innerText || "").trim().length : 0;
+      return PRICE.test(t) || (linkText > 0 && linkText >= t.trim().length * 0.6);
+    };
+    const looksLikeReview = (card) => {
+      const lines = (card.innerText || "").split("\n").map((l) => l.trim());
+      return (
+        VERIFIED.test(card.innerText) ||
+        /helpful|report|reviewed|review by|ago\b/i.test(card.innerText) ||
+        !!findDate(lines) ||
+        lines.some((l) => l.length >= 60)
+      );
+    };
+    const ranked = [...groups.values()]
+      .filter((g) => g.length >= 2)
+      .filter((g) => g.filter((e) => isProductTile(e.card)).length <= g.length * 0.3)
+      .filter((g) => g.filter((e) => looksLikeReview(e.card)).length >= g.length * 0.6)
+      .sort((a, b) => b.length - a.length);
+    const best = ranked[0] || [];
+    if (best.length < 2) return { site: "This page", product: { title: document.title }, reviews: [] };
+
+    const reviews = [];
+    for (const { card, rating, indicator } of best) {
+      const ratingText = (indicator.innerText || "").trim();
+      const lines = card.innerText
+        .split("\n")
+        .map((l) => l.trim())
+        .filter((l) => l && l !== ratingText && !UI_LINE.test(l) && !OUT_OF_5.test(l));
+      if (!lines.length) continue;
+      const date = findDate(lines);
+      const blocks = [];
+      card.querySelectorAll("*").forEach((el) => {
+        if (indicator.contains(el)) return;
+        const t = (el.textContent || "").trim();
+        if (t.length < 3 || UI_LINE.test(t) || OUT_OF_5.test(t)) return;
+        if (t.length < 80 && (VERIFIED.test(t) || /\bago\b/i.test(t) || findDate([t]) && t.length < 30)) return;
+        if ([...el.children].some((k) => (k.textContent || "").trim().length >= t.length * 0.5)) return;
+        blocks.push({ el, t: clean(el.innerText || t) });
+      });
+      const strip = (t) => t.replace(/(\.\.\.|…)?\s*(read more|see more|show more|more)$/i, "").trim();
+      const bodyBlock = blocks.reduce((a, b) => (strip(b.t).length > strip(a?.t || "").length ? b : a), null);
+      const body = bodyBlock ? strip(bodyBlock.t) : lines.reduce((a, b) => (b.length > a.length ? b : a), "");
+      if (body.length < 3) continue;
+      const heading = card.querySelector("h2, h3, h4, h5, [class*='title' i]");
+      let title = heading && !heading.contains(bodyBlock?.el) ? clean(heading.innerText) : "";
+      if (!title || title === body || title.length > 150) {
+        const before = bodyBlock ? blocks.slice(0, blocks.indexOf(bodyBlock)).reverse() : [];
+        const prev = before.find((b) => b.t.length >= 3 && b.t.length <= 160 && !findDate([b.t]) && !VERIFIED.test(b.t));
+        title = prev ? prev.t.replace(/^["“]|["”]$/g, "") : "";
+      }
+      const titleStem = (title || "").replace(/(\.\.\.|…)$/, "").trim();
+      const titleRepeatsBody = titleStem.length > 15 && body.startsWith(titleStem);
+      reviews.push({
+        rating,
+        title: title && title !== body && !titleRepeatsBody ? title : undefined,
+        text: body,
+        date,
+        verified: VERIFIED.test(card.innerText),
+      });
+    }
+    return { site: location.hostname.replace(/^www\./, "") || "This page", product: { title: document.title }, reviews };
+  }
+
   async function expandTruncated() {
     if (!/flipkart\./i.test(location.hostname)) return;
     const buttons = [...document.querySelectorAll("body *")].filter(
@@ -221,19 +440,26 @@
 
   await expandTruncated();
 
-  const candidates = [];
-  for (const fn of [selection, amazon, flipkart, googleMaps, jsonLd, microdata]) {
+  const run = (fn) => {
     try {
-      candidates.push(fn());
-    } catch {}
-  }
-  const best = candidates.sort((a, b) => b.reviews.length - a.reviews.length)[0] || {
-    site: "",
-    product: { title: document.title },
-    reviews: [],
+      return fn();
+    } catch {
+      return { site: "", product: { title: document.title }, reviews: [] };
+    }
   };
-  const selectionWins = candidates.find((c) => c.site === "Selected text" && c.reviews.length >= 3);
-  const chosen = selectionWins || best;
+  const most = (list) => list.sort((a, b) => b.reviews.length - a.reviews.length)[0];
+
+  const picked = run(selection);
+  const dedicated = most([run(amazon), run(flipkart), run(googleMaps)]);
+  const structured = most([run(jsonLd), run(microdata)]);
+  let chosen;
+  if (picked.reviews.length >= 3) chosen = picked;
+  else if (dedicated.reviews.length >= 2) chosen = dedicated;
+  else if (structured.reviews.length >= 3) chosen = structured;
+  else {
+    const fallback = run(generic);
+    chosen = most([fallback, structured, dedicated]);
+  }
 
   return {
     site: chosen.site,

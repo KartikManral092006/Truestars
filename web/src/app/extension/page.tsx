@@ -32,8 +32,8 @@ export default function ExtensionPage() {
       t: "Open some reviews",
       d: (
         <>
-          On Amazon or Flipkart, open a product and its reviews so they load (on Amazon, click See more reviews). Google Maps
-          places and shops that publish review data work too. Anywhere else, select the review text first.
+          Open a product&apos;s reviews on Amazon, Flipkart, eBay, Google Maps or most other shops so they load (on Amazon, click See
+          more reviews). If a page isn&apos;t recognised, select the review text first.
         </>
       ),
     },
