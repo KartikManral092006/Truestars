@@ -2,90 +2,121 @@
 
 **Know what goes wrong before you buy.**
 
-Live: **https://truestars.vercel.app**
+TrueStars reads a product's reviews and tells you what actually goes wrong, how many buyers report it, and whether it matters to you. Every claim links to the reviews behind it.
 
-A 4.4★ average hides the one problem that will ruin a purchase for you. TrueStars reads hundreds of reviews, finds the real dealbreakers, estimates how many buyers hit each one, and links every claim to the reviews behind it. Tell it how you will use the product and it sorts the problems by how much they matter to you.
+**Live demo:** https://truestars.vercel.app  ·  **Chrome extension:** https://truestars.vercel.app/extension
 
+*Submitted to SLAY HACKS 2026.*
+
+![A TrueStars report for a 3.8★ bathroom scale: the biggest risk is unreliable weight readings, reported by roughly 27% of buyers](docs/report.png)
+
+## The problem
+
+A star rating is an average, and averages hide things. A bathroom scale on Amazon has 3.8★, and 612 of its 1,120 reviews give it five stars. But roughly **27% of buyers report that it gives unreliable readings**. Nobody reads 1,000 reviews to find that out, and the star rating can't show it.
+
+Most review tools give you a single trust score. TrueStars answers the question a buyer actually has: **what's the catch, how common is it, and does it matter for me?**
+
+**Who it's for:** anyone shopping online, on any site, in any country.
 
 ## What it does
 
-- **Dealbreakers.** Recurring problems grouped into themes, with severity, an estimate of how many buyers report each one, and when it tends to happen ("after 2 months").
-- **Evidence for every claim.** Each theme opens into the reviews behind it, with the exact sentence highlighted.
-- **Fits you.** Describe your situation ("it's a gift for my elderly parent") and problems are re-ranked as *matters to you*, *might matter*, or *probably not for you*, each with a one-line reason.
-- **Can you trust the stars?** Checks you can verify yourself: bursts of 5★ reviews on one day, copy-paste wording, unverified praise, free-product disclosures, love-it-or-hate-it ratings, and empty 5★ reviews.
-- **Ask the reviews.** Type any question ("Does it work on carpet?"). Every review is searched in your browser, and the answer is written only from the matching reviews, with each finding linked to them. If nobody mentions it, it says so.
-- **Before your return window closes.** A checklist of things to test early, built from the problems buyers reported, plus a chart of when serious failures tend to show up.
-- **Complaints hiding in 4 and 5 star reviews.** Problems that happy reviewers mention but that never pull the average down.
-- **Accuracy you can check.** A hand-labelled comparison (precision, recall, Cohen's kappa) and the share of AI quotes that matched the review word for word, published at `/accuracy`.
-- **Three ways in.** Sample products on the website, paste reviews from any site, or the Chrome extension, which reads the reviews on the page you are viewing.
+- **Dealbreakers.** Recurring problems grouped into themes. Each shows its severity, an estimate of how many buyers report it, and when it tends to happen ("after 3 weeks").
+- **Evidence for every claim.** Each problem opens into the real reviews, with the exact sentence highlighted.
+- **Fits you.** Describe how you'll use the product ("a gift for my elderly parent"). Problems are re-ranked as *matters to you*, *might matter* or *probably not for you*, each with a reason.
+- **Ask the reviews.** Ask any question ("Does it work on carpet?"). The answer comes only from matching reviews, with citations. If nobody mentions it, TrueStars says so.
+- **Can you trust the stars?** Checks a person can verify: bursts of 5★ reviews on one day, copy-pasted wording, free-product disclosures, empty 5★ reviews.
+- **Complaints hidden in 4★ and 5★ reviews.** Problems that happy reviewers mention but that never lower the average.
+- **Before your return window closes.** What to test in the first week, plus a chart of when serious failures tend to appear.
 
-## How it works
+There are three ways to use it:
+1. Sample reports on the website.
+2. Paste reviews from any site.
+3. The Chrome extension, which reads the reviews on the product page you're viewing.
+
+![Each problem opens into the reviews behind it, with the exact sentence highlighted](docs/evidence.png)
+
+## How the AI works
 
 ```
-reviews ──► selection ──► /api/extract (LLM, 20 reviews per call) ──► quote check
-                                                                    │
-            stats (bursts, duplicates, …)                            ▼
-                     │                           /api/themes (LLM groups labels)
-                     ▼                                               │
-                report builder (counts, weighted %, severity) ◄──────┘
-                     │
-                     ▼
-               /api/fit (LLM, optional, on request)
+reviews → selection → extraction (LLM) → quote check → grouping (LLM) → counting in code → report
 ```
 
-1. **Selection.** Up to 100 informative reviews are read in depth: low-star reviews first (up to 65%), then the most detailed positive ones.
-2. **Extraction.** An LLM reads each batch and returns, per review, short problem labels with severity, a timeframe and an exact quote, plus praise labels. Output is validated with zod. Any quote that does not appear in the review text is dropped.
-3. **Grouping.** A second LLM call merges labels into at most 8 problem themes and 5 praise themes. Labels it invents are discarded.
-4. **Counting is done in code, not by the AI.** Because negative reviews are over-sampled, each theme's share is re-weighted to the full rating mix (stratified by star rating), so the percentage estimates how many of *all* buyers report it.
-5. **Patterns** are plain statistics over every review and need no AI.
+| Step | What happens | Model or method |
+|---|---|---|
+| Selection | Up to 100 of the most informative reviews: low-star reviews first, then the most detailed positive ones | Code |
+| Extraction | For each review: problem labels, severity, timeframe and an **exact quote**. 20 reviews per call, JSON output validated with zod | `openai/gpt-oss-20b` on Groq |
+| Quote check | Any quote not found word for word in the review is dropped | Code |
+| Grouping | Labels are merged into at most 8 problem themes; any label the model invents is discarded | `openai/gpt-oss-120b` on Groq |
+| Counting | Shares are calculated in code and re-weighted to the product's real star mix, because low-star reviews were over-sampled | Code |
+| Trust checks | Bursts, duplicates, disclosures and rating shape | Statistics, no AI |
+| Ask the reviews | BM25 search in the browser finds the relevant reviews; the model answers only from those and cites them | BM25 + `gpt-oss-120b` |
+| Fits you, checklist | Re-ranks problems for the user's situation; writes the first-week checklist | `gpt-oss-120b` |
+
+**Results on the three sample products** (3,175 real Amazon reviews, 280 read in depth):
+- **278 of 284 AI quotes (98%) matched the review word for word.** The other 6 were dropped.
+- 17 recurring problems found.
 
 ## Responsible AI
 
-- No mystery scores. Every number links to its evidence.
-- No "AI-written" accusations. AI-text detectors are unreliable, so TrueStars only flags patterns a person can check.
-- No invented quotes. The model must quote the review exactly, or the quote is dropped.
-- Review text is treated as data. Prompts tell the model to ignore instructions inside reviews, and outputs are schema-validated.
-- No scraping. The extension uses Chrome's `activeTab` permission: it can read nothing until you click it, and then only the tab you are on. Nothing is stored server-side.
-- Limitation: people with problems are more likely to write reviews, so the percentages are signals, not guarantees. The report says so.
+- **No mystery scores.** Every number links to its evidence.
+- **No "fake review" or "AI-written" accusations.** Detectors for that are unreliable, so TrueStars only flags patterns a person can check.
+- **No invented quotes.** If the model's quote isn't in the review, it is dropped.
+- **Review text is treated as data.** Prompts tell the model to ignore instructions inside reviews, and every output is schema-validated.
+- **No scraping, no accounts.** The extension uses Chrome's `activeTab` permission, so it reads only the page you're on and only when you click it. Nothing is stored on the server.
+- **Honest limits.** Unhappy buyers write reviews more often, so the percentages are signals, not guarantees. The report says so.
+
+## Try it
+
+**Website.** Open https://truestars.vercel.app and pick a sample product, or paste reviews from any site. No sign-up is needed.
+
+**Chrome extension**
+1. Download the zip from https://truestars.vercel.app/extension and unzip it.
+2. Open `chrome://extensions` and turn on **Developer mode** (top right).
+3. Click **Load unpacked** and choose the unzipped folder (the one that contains `manifest.json`).
+4. Open a product page, scroll to the reviews, and click the TrueStars icon. The report opens in a side panel.
+
+**Where the extension works:**
+- Amazon and Flipkart, each with a dedicated reader.
+- A general reader that recognises review lists on most other shops. It has been tested on eBay, noon, Nykaa, IKEA, Decathlon and Snapdeal.
+- Any site with schema.org review data.
+- Google Maps reviews.
+- Any review text you select.
 
 ## Run it locally
 
-Requirements: Node 20+, a free [Groq](https://console.groq.com) API key.
+You need Node 22 and a free [Groq API key](https://console.groq.com).
 
 ```bash
 git clone https://github.com/KartikManral092006/Truestars.git
 cd Truestars/web
-cp .env.example .env.local      # then put your key in GROQ_API_KEY
+cp .env.example .env.local   # put your key in GROQ_API_KEY
 npm install
-npm run dev                     # http://localhost:3000
+npm run dev                  # http://localhost:3000
 ```
 
-Pre-compute the three sample reports so they load instantly (uses your Groq quota once):
+To use the extension with your local server, click **Settings** in the side panel and enter `http://localhost:3000`.
 
-```bash
-npm run precompute              # writes public/samples/*.report.json
+## Tech stack
+
+- **Web:** Next.js 16, React 19, TypeScript, Tailwind CSS v4, GSAP, three.js.
+- **AI:** Groq (`gpt-oss-20b` and `gpt-oss-120b`), with zod for output validation.
+- **Extension:** Chrome Manifest V3, side panel.
+- **Hosting:** Vercel.
+
+## Project structure
+
+```
+web/
+  src/app/            pages, plus API routes: extract, themes, fit, checklist, ask
+  src/lib/            report builder, statistics, search, evaluation
+  src/lib/server/     Groq client: JSON repair and retries
+  src/components/     report and landing-page UI
+  public/samples/     sample products and their pre-computed reports
+extension/            Chrome extension: side panel and the review readers (extract.js)
 ```
 
-### Chrome extension
+## Limitations
 
-1. Open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**, choose the `extension/` folder.
-2. In the side panel footer, click **Server** to point it at your deployment (default `http://localhost:3000`).
-3. Open an Amazon product, click **See more reviews**, then click the ★ toolbar button.
-
-Supported pages: Amazon review lists, Google Maps reviews, any site with schema.org review data (JSON-LD or microdata), and any selected text.
-
-## Deploy
-
-The live site runs on Vercel and redeploys on every push to `main`.
-
-- Root directory: `web`
-- Environment variables: `GROQ_API_KEY`, `GROQ_EXTRACT_MODEL`, `GROQ_REASON_MODEL`, `NEXT_PUBLIC_SITE_URL`
-- After changing the extension, rebuild `web/public/downloads/truestars-extension.zip`.
-
-## Tech
-
-Next.js 16 (App Router), React 19, Tailwind CSS 4, shadcn/ui, Magic UI, Motion, GSAP (ScrollTrigger, SplitText), Lenis, React Three Fiber with a custom GLSL point shader, Groq (`openai/gpt-oss-20b` for extraction, `openai/gpt-oss-120b` for grouping, fit, checklist and answers; configurable in `.env.local`), zod, Chrome Manifest V3.
-
-## Data
-
-Sample products use real reviews from the Amazon Reviews 2023 dataset: Hou et al., *Bridging Language and Items for Retrieval and Recommendation* (2024), McAuley Lab, UC San Diego. Reviewer IDs are removed, and reviews duplicated across product variants are merged.
+- The extension reads only the reviews already loaded on the page, often 10–20. Opening "See all reviews" first gives better results.
+- Some shops change their pages often. If a page isn't recognised, select the review text and click the icon.
+- The percentages describe people who wrote reviews, not every buyer.
