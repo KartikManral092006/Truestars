@@ -120,9 +120,6 @@ export default function Home() {
             <h2 data-reveal="lines" className="t-h2">
               Built so you can check our work.
             </h2>
-            <Link href="/accuracy" data-reveal="fade" className="mt-6 inline-flex text-[0.9375rem] font-semibold text-gold-ink hover:underline hover:underline-offset-4">
-              See how accurate it is
-            </Link>
           </div>
           <dl className="border-t border-line">
             {PRINCIPLES.map(([t, d]) => (
@@ -147,7 +144,6 @@ export default function Home() {
             <nav className="grid grid-cols-2 gap-x-12 gap-y-2 text-[0.9375rem]" aria-label="Footer">
               <Link href="/analyze?mode=paste" className="text-subtle hover:text-ink">Paste reviews</Link>
               <Link href="/extension" className="text-subtle hover:text-ink">Chrome extension</Link>
-              <Link href="/accuracy" className="text-subtle hover:text-ink">Accuracy</Link>
               <Link href="/#how" className="text-subtle hover:text-ink">How it works</Link>
             </nav>
           </div>

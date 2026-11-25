@@ -8,7 +8,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/analyze?sample=white-noise-machine", priority: 0.7 },
     { path: "/analyze?sample=facial-massager", priority: 0.7 },
     { path: "/analyze?mode=paste", priority: 0.6 },
-    { path: "/accuracy", priority: 0.6 },
     { path: "/extension", priority: 0.5 },
   ];
   return pages.map((p) => ({ url: `${SITE_URL}${p.path}`, changeFrequency: "weekly", priority: p.priority }));

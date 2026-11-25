@@ -7,7 +7,6 @@ import { Logo } from "./Logo";
 const LINKS = [
   { href: "/#how", label: "How it works", hide: true },
   { href: "/analyze?mode=paste", label: "Paste reviews", hide: false },
-  { href: "/accuracy", label: "Accuracy", hide: true },
 ];
 
 export function SiteHeader({ fixed = false }: { fixed?: boolean }) {

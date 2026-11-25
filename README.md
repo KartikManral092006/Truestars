@@ -120,3 +120,7 @@ extension/            Chrome extension: side panel and the review readers (extra
 - The extension reads only the reviews already loaded on the page, often 10–20. Opening "See all reviews" first gives better results.
 - Some shops change their pages often. If a page isn't recognised, select the review text and click the icon.
 - The percentages describe people who wrote reviews, not every buyer.
+
+## License
+
+[MIT](LICENSE)

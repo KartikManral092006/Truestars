@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { SiteHeader } from "@/components/SiteHeader";
 import type { EvalResults } from "@/lib/eval";
 
-export const metadata: Metadata = { title: "How accurate is TrueStars?" };
+export const metadata: Metadata = { title: "How accurate is TrueStars?", robots: { index: false, follow: false } };
 
 function load(): EvalResults | null {
   try {
