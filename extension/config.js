@@ -1,4 +1,4 @@
-const TRUESTARS_DEFAULT_APP_URL = "http://localhost:3000";
+const TRUESTARS_DEFAULT_APP_URL = "https://truestars.vercel.app";
 
 async function getAppUrl() {
   const { appUrl } = await chrome.storage.local.get("appUrl");
