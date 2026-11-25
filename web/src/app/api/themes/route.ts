@@ -32,7 +32,8 @@ function sanitize(groups: ThemeGroup[], allowed: Set<string>, max: number): Them
     const labels = g.labels.filter((l) => allowed.has(l) && !used.has(l));
     labels.forEach((l) => used.add(l));
     if (!labels.length || !g.name.trim()) continue;
-    out.push({ name: g.name.trim().slice(0, 60), description: g.description.trim().slice(0, 240), labels });
+    const name = g.name.trim().slice(0, 60);
+    out.push({ name: name.charAt(0).toUpperCase() + name.slice(1), description: g.description.trim().slice(0, 240), labels });
     if (out.length >= max) break;
   }
   return out;
